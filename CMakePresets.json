@@ -114,6 +114,29 @@
             }
         },
         {
+            "name": "xtensa-esp32-elf-gcc-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/.build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/.build/install/${presetName}",
+                "CMAKE_TOOLCHAIN_FILE": {
+                    "type": "FILEPATH",
+                    "value": "toolchains/xtensa-esp32-elf-gcc/toolchain.cmake"
+                }
+            },
+            "architecture": {
+                "value": "unspecified",
+                "strategy": "external"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "intelliSenseMode": "gcc-xtensa"
+                }
+            }
+        },
+        {
             "name": "fpga-xilinx-unknown-vivado",
             "displayName": "fpga-xilinx-unknown-vivado",
             "inherits": "fpga-xilinx-unknown-vivado-base"
@@ -217,6 +240,22 @@
             "displayName": "xcode-arm-none-eabi-swiftc Release",
             "inherits": "arm-none-eabi-swiftc-release",
             "generator": "Xcode"
+        },
+        {
+            "name": "xtensa-esp32-elf-gcc-debug",
+            "displayName": "xtensa-esp32-elf-gcc Debug",
+            "inherits": "xtensa-esp32-elf-gcc-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "xtensa-esp32-elf-gcc-release",
+            "displayName": "arm-none-eabi-gcc Release",
+            "inherits": "xtensa-esp32-elf-gcc-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
         }
     ],
     "buildPresets": [
@@ -271,6 +310,14 @@
         {
             "name": "xcode-arm-none-eabi-clang-release",
             "configurePreset": "xcode-arm-none-eabi-clang-release"
+        },
+        {
+            "name": "xtensa-esp32-elf-gcc-debug",
+            "configurePreset": "xtensa-esp32-elf-gcc-debug"
+        },
+        {
+            "name": "xtensa-esp32-elf-gcc-release",
+            "configurePreset": "xtensa-esp32-elf-gcc-release"
         }
     ]
 }
