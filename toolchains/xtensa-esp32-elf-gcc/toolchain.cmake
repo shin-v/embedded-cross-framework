@@ -11,7 +11,7 @@ ELSE()
 ENDIF()
 
 # The triplet to use for the target
-SET(TARGET_TRIPLET "xtensa-lx106-elf")
+SET(TARGET_TRIPLET "xtensa-esp32-elf")
 
 find_program(TOOLCHAIN_COMPILER "${TARGET_TRIPLET}-gcc${TOOLCHAIN_EXE}")
 MESSAGE(STATUS "TOOLCHAIN_COMPILER: " ${TOOLCHAIN_COMPILER})
