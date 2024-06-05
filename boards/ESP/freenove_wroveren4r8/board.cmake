@@ -16,31 +16,85 @@ message(STATUS "Hello World! ${${board_name}_FIRMWARE_DIR}")
 
 set(${board_name}_BOARD_RTOS_DIR ${${board_name}_FIRMWARE_DIR}/components/freertos)
 set(${board_name}_BOARD_DRIVER_DIR ${${board_name}_FIRMWARE_DIR}/components/driver)
+set(${board_name}_BOARD_CPU_DIR ${${board_name}_FIRMWARE_DIR}/components/xtensa)
+
+set(${board_name}_FREERTOS_SRCS
+    "${${board_name}_BOARD_RTOS_DIR}/heap_idf.c"
+    "${${board_name}_BOARD_RTOS_DIR}/app_startup.c"
+    "${${board_name}_BOARD_RTOS_DIR}/port_common.c"
+    "${${board_name}_BOARD_RTOS_DIR}/port_systick.c"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/list.c"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/queue.c"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/tasks.c"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/timers.c"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/croutine.c"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/event_groups.c"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/stream_buffer.c"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/portable/xtensa/port.c"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/portable/xtensa/portasm.S"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/portable/xtensa/xtensa_init.c"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/portable/xtensa/xtensa_overlay_os_hook.c"
+    "${${board_name}_BOARD_RTOS_DIR}/esp_additions/freertos_compatibility.c"
+    "${${board_name}_BOARD_RTOS_DIR}/esp_additions/idf_additions.c"
+)
+
+set(${board_name}_FREERTOS_INCDIRS
+    "${${board_name}_BOARD_RTOS_DIR}/config/include"
+    "${${board_name}_BOARD_RTOS_DIR}/config/include/freertos"
+    "${${board_name}_BOARD_RTOS_DIR}/config/xtensa/include"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/include"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/portable/xtensa/include"
+    "${${board_name}_BOARD_RTOS_DIR}/FreeRTOS-Kernel/portable/xtensa/include/freertos"
+    "${${board_name}_BOARD_RTOS_DIR}/esp_additions/include"
+)
+
 
 # Work In Progress
-# TODO: Add components manually, instead of using CMakeLists.txt (because it uses esp-idf macros)
-include(${${board_name}_BOARD_RTOS_DIR}/CMakeLists.txt)
-include(${${board_name}_BOARD_DRIVER_DIR}/CMakeLists.txt)
+#   I need to resolve the #include problems caused by xtensa HAL imports.
+#   So far, it does include the xtensa HAL include directories, it is trying to get it from a package: e.g. <xtensa/config/core.h>
+set(${board_name}_HAL_SRCS
+    "${${board_name}_BOARD_DRIVER_DIR}/gpio/gpio.c"
+    "${${board_name}_BOARD_DRIVER_DIR}/gpio/gpio_glitch_filter_ops.c"
+    "${${board_name}_BOARD_DRIVER_DIR}/gpio/rtc_io.c"
+    "${${board_name}_BOARD_DRIVER_DIR}/spi/spi_bus_lock.c"
+    "${${board_name}_BOARD_CPU_DIR}/eri.c"
+    "${${board_name}_BOARD_CPU_DIR}/xt_trax.c"
+)
 
-##set(IDF_VERSION "v5.0.1")
-##include(${CMAKE_CURRENT_SOURCE_DIR}/firmware/espressif/esp-idf-${IDF_VERSION}/tools/cmake/project.cmake)
+set(${board_name}_DRIVER_INCDIRS 
+    "${${board_name}_BOARD_DRIVER_DIR}/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/deprecated"
+    "${${board_name}_BOARD_DRIVER_DIR}/analog_comparator/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/dac/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/gpio/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/gptimer/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/i2c/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/i2s/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/ledc/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/mcpwm/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/parlio/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/pcnt/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/rmt/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/sdio_slave/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/sdmmc/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/sigma_delta/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/spi/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/temperature_sensor/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/touch_sensor/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/wai/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/uart/include"
+    "${${board_name}_BOARD_DRIVER_DIR}/usb_serial_jtag/include"
+    "${${board_name}_BOARD_CPU_DIR}/esp32/include"
+    "${${board_name}_BOARD_CPU_DIR}/include"
+)
 
-## Work In Progress
-##set(${board_name}_CFLAGS ${ARM_CPU_CORTEX_M3_FLAGS} ${ARM_CPU_CORTEX_THUMB_INTERWORK_FLAGS} ${ARM_CPU_ABI_SOFT_FLOAT_FLAGS} -ffunction-sections -fdata-sections -fno-common -fmessage-length=0)
-##set(${board_name}_LDFLAGS ${ARM_CPU_CORTEX_M3_FLAGS} ${ARM_CPU_CORTEX_THUMB_INTERWORK_FLAGS} ${ARM_CPU_ABI_SOFT_FLOAT_FLAGS} ${TOOLCHAIN_LINKER_FLAG} ${TOOLCHAIN_LINKER_PREFIX}--gc-sections ${TOOLCHAIN_LINKER_EXTRA_LDFLAGS})
-##set(${board_name}_LIBDIR ${TOOLCHAIN_LIBDIR} ${TOOLCHAIN_LIBGCC_DIR})
+add_library(${board_name}_HAL STATIC ${${board_name}_HAL_SRCS})
+target_compile_options(${board_name}_HAL PRIVATE ${${board_name}_CFLAGS})
+target_compile_definitions(${board_name}_HAL PRIVATE ${${board_name}_DEFINES})
+target_include_directories(${board_name}_HAL
+    PUBLIC ${${board_name}_HAL_INCDIR}
+)
 
-## Work In Progress
-## set(include_dirs
-##    "${original_driver_dir}/i2c/include/driver"
-##    "${original_driver_dir}/spi/include/driver"
-##    "${original_driver_dir}/gpio/include/driver"
-##    "${original_driver_dir}/rmt/include/driver"
-##    "${original_driver_dir}/usb_serial_jtag/include/driver"
-##    "${original_driver_dir}/i2c/include"
-##    "${original_driver_dir}/spi/include"
-##    "${original_driver_dir}/gpio/include"
-##    "${original_driver_dir}/rmt/include"
-##    "${original_driver_dir}/usb_serial_jtag/include"
-##    "${CMAKE_CURRENT_SOURCE_DIR}/../hal/include")
-
+set(${board_name}_LIBS
+    ${board_name}_HAL
+)
