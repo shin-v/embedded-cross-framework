@@ -15,7 +15,24 @@ set(${board_name}_HAL_INCDIRS
     ${${board_name}_BOARD_HAL_DIR}/${${board_name}_TARGET}/include
     ${${board_name}_BOARD_HAL_DIR}/include
     ${${board_name}_BOARD_HAL_DIR}/platform_port/include
+    ${${board_name}_DIR}/../include
+    ${${board_name}_BOARD_COMPONENTS_DIR}/soc/include
+    ${${board_name}_BOARD_COMPONENTS_DIR}/soc/${${board_name}_TARGET}/include
+    ${${board_name}_BOARD_COMPONENTS_DIR}/esp_common/include
+    ${${board_name}_BOARD_COMPONENTS_DIR}/xtensa/include
 )
+
+if(${${board_name}_TARGET} STREQUAL "esp32")
+    list(APPEND ${board_name}_HAL_INCDIRS ${${board_name}_BOARD_COMPONENTS_DIR}/xtensa/esp32/include)
+endif()
+
+if(${${board_name}_TARGET} STREQUAL "esp32s2")
+    list(APPEND ${board_name}_HAL_INCDIRS ${${board_name}_BOARD_COMPONENTS_DIR}/xtensa/esp32s2/include)
+endif()
+
+if(${${board_name}_TARGET} STREQUAL "esp32s3")
+    list(APPEND ${board_name}_HAL_INCDIRS ${${board_name}_BOARD_COMPONENTS_DIR}/xtensa/esp32s3/include)
+endif()
 
 if(NOT ${${board_name}_CONFIG_HAL_WDT_USE_ROM_IMPL})
     list(APPEND ${board_name}_HAL_SRCS "${${board_name}_BOARD_HAL_DIR}/wdt_hal_iram.c")

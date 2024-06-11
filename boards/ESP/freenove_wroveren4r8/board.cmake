@@ -16,7 +16,7 @@ set(${board_name}_TARGET "esp32")
 # I still need to make this esp32 board's flags appropriate. For now everything is 1.
 set(${board_name}_CONFIG_HAL_WDT_USE_ROM_IMPL 1)
 set(${board_name}_CONFIG_APP_BUILD_TYPE_PURE_RAM_APP 1)
-set(${board_name}_CONFIG_SOC_LP_TIMER_SUPPORTED 1)
+set(${board_name}_CONFIG_SOC_LP_TIMER_SUPPORTED 0)
 
 set(${board_name}_BOOTLOADER_BUILD 1)
 set(${board_name}_CONFIG_SOC_FLASH_ENC_SUPPORTED 1)
@@ -61,4 +61,4 @@ set(${board_name}_CONFIG_SOC_HMAC_SUPPORTED 1)
 set(${board_name}_CONFIG_SOC_DIG_SIGN_SUPPORTED 1)
 
 
-include(../tool.cmake)
+include(${${board_name}_DIR}/../tool.cmake)
