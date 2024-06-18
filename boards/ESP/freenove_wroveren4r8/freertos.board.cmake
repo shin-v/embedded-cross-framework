@@ -107,7 +107,15 @@ set(${board_name}_HAL_INCDIR
     "${${board_name}_BOARD_COMPONENTS_DIR}/esp_rom/include"
     "${${board_name}_BOARD_COMPONENTS_DIR}/esp_hw_support/include"
     "${${board_name}_BOARD_COMPONENTS_DIR}/soc/esp32/include"
-    "${${board_name}_BOARD_COMPONENTS_DIR}/xtensa/deprecated_include"
+    "${${board_name}_BOARD_COMPONENTS_DIR}/soc/include"
+    "${${board_name}_BOARD_COMPONENTS_DIR}/newlib/platform_include"
+    "${${board_name}_BOARD_COMPONENTS_DIR}/heap/include"
+    "${${board_name}_BOARD_COMPONENTS_DIR}/hal/include"
+    "${${board_name}_BOARD_COMPONENTS_DIR}/hal/esp32/include"
+    "${${board_name}_BOARD_COMPONENTS_DIR}/app_trace/include"
+    "${${board_name}_BOARD_COMPONENTS_DIR}/app_trace/port/include"
+    "${${board_name}_BOARD_COMPONENTS_DIR}/hal/platform_port/include"
+    "${${board_name}_BOARD_COMPONENTS_DIR}/esp_pm/include"
 )
 
 add_library(${board_name}_HAL STATIC ${${board_name}_HAL_SRCS})
