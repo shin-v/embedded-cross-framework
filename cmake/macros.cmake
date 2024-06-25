@@ -29,6 +29,15 @@ macro(find_firmware firmware_list)
     find_grouped_directories(firmware ${firmware_list})
 endmacro()
 
+# Identify requiring components for the project
+macro(require_components)
+    set(${project_name}_COMPONENT_REQUIREMENTS "")
+    # Add each argument to the COMPONENT_REQUIREMENTS list
+    foreach(component ${ARGN})
+        list(APPEND ${project_name}_COMPONENT_REQUIREMENTS ${component})
+    endforeach()
+endmacro()
+
 # Check or set the BOARD variable against/to supported boards
 macro(check_boards valid_boards)
     if(NOT BOARDS OR BOARDS STREQUAL "ALL_BOARDS")
