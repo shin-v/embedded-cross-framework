@@ -14,6 +14,7 @@ set(${board_name}_CPU "XTENSA_CPU_32BIT_LX6")
 
 set(${board_name}_DEFINES -D${BOARD_NAME_UPPERCASE} -D${${board_name}_CLASS} -D${${board_name}_CLASS}${${board_name}_MODULE} -D${${board_name}_CLASS}${${board_name}_MODULE}${${board_name}_FAMILY} -D${${board_name}_CLASS}${${board_name}_MODULE}${${board_name}_FAMILY}xx -D${${board_name}_CLASS}${${board_name}_MODULE}${${board_name}_FAMILY}${${board_name}_MODEL} -DESP_PLATFORM)
 set(${board_name}_TARGET "esp32")
+set(${board_name}_TARGET_ARCH "xtensa")
 
 include(${${board_name}_DIR}/../tools.cmake)
 process_component_requirements()
