@@ -1,3 +1,31 @@
+# For colour outputs
+if(NOT WIN32)
+    string(ASCII 27 Esc)
+    set(ColourReset "${Esc}[m")
+    set(ColourBold  "${Esc}[1m")
+    set(Red         "${Esc}[31m")
+    set(Green       "${Esc}[32m")
+    set(Yellow      "${Esc}[33m")
+    set(Blue        "${Esc}[34m")
+    set(Magenta     "${Esc}[35m")
+    set(Cyan        "${Esc}[36m")
+    set(White       "${Esc}[37m")
+    set(BoldRed     "${Esc}[1;31m")
+    set(BoldGreen   "${Esc}[1;32m")
+    set(BoldYellow  "${Esc}[1;33m")
+    set(BoldBlue    "${Esc}[1;34m")
+    set(BoldMagenta "${Esc}[1;35m")
+    set(BoldCyan    "${Esc}[1;36m")
+    set(BoldWhite   "${Esc}[1;37m")
+    macro(message)
+        if(${ARGC} LESS 3)
+            _message(${ARGV})
+        else()
+            _message(${ARGV0} "${${ARGV2}}${ARGV1}${ColourReset}")
+        endif()
+    endmacro()
+endif()
+
 # Find all directories grouped by their parent directory
 macro(find_grouped_directories group_basedir dir_basename_list)
     file(GLOB top_level RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/${group_basedir} ${CMAKE_CURRENT_SOURCE_DIR}/${group_basedir}/*)
@@ -254,6 +282,11 @@ endmacro()
 
 # Build the subproject for the given board
 macro(build_subproject_for_board project board subproject executable)
+
+    if(${board}_USING_MODULAR_COMPONENT_REQUIREMENTS)
+        process_component_requirements(${subproject})
+    endif()
+
     if(NOT ${subproject}_STARTUP_SRC)
         if(NOT ${project}_STARTUP_SRC)
             set(${subproject}_STARTUP_SRC ${${board}_STARTUP_SRC})
@@ -316,6 +349,7 @@ macro(build_subproject_for_board project board subproject executable)
         #     ${${board}_USWIFT_INCDIRS}
         # )
     endif()
+
     # Add any toolchain specific libraries
     add_executable(${executable}
         ${${subproject}_STARTUP_SRC}
@@ -343,6 +377,7 @@ macro(build_subproject_for_board project board subproject executable)
         ${${project}_DEFINES}
         ${${subproject}_DEFINES}
     )
+
     target_include_directories(${executable} PRIVATE
         ${TOOLCHAIN_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -371,8 +406,9 @@ macro(build_subproject_for_board project board subproject executable)
     endif()
     if(${subproject}_LINKER_SCRIPT)
        set(${subproject}_LINKER_ARGS ${TOOLCHAIN_LINKER_SCRIPT_FLAGS}${${subproject}_LINKER_SCRIPT})
-       MESSAGE(STATUS "${subproject}_LINKER_ARGS: ${${subproject}_LINKER_ARGS} ${TOOLCHAIN_XLINKER_PREFIX} ${TOOLCHAIN_LINKER_SCRIPT_PREFIX}${${subproject}_LINKER_SCRIPT}")
+       message(STATUS "${subproject}_LINKER_ARGS: ${${subproject}_LINKER_ARGS} ${TOOLCHAIN_XLINKER_PREFIX} ${TOOLCHAIN_LINKER_SCRIPT_PREFIX}${${subproject}_LINKER_SCRIPT}")
     endif()
+
     target_link_directories(${executable} PRIVATE
         ${${subproject}_LIBDIR}
         ${OS_LIBDIR}
@@ -386,6 +422,7 @@ macro(build_subproject_for_board project board subproject executable)
         ${TOOLCHAIN_LIBDIR}
         ${TOOLCHAIN_LIBGCC_DIR}
     )
+
     target_link_options(${executable} PRIVATE
         ${TOOLCHAIN_LINK_FLAGS}
         ${${board}_LDFLAGS}
@@ -393,6 +430,7 @@ macro(build_subproject_for_board project board subproject executable)
         ${${subproject}_LDFLAGS}
         ${${subproject}_LINKER_ARGS}
     )
+    
     target_link_libraries(${executable} PRIVATE
         ${TOOLCHAIN_LIBS}
         ${OS_LIBS}

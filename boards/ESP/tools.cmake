@@ -80,8 +80,6 @@ function(add_prefix var prefix)
     endforeach()
     set(${var} "${newlist}" PARENT_SCOPE)
 endfunction()
-function(idf_component_optional_requires req_type)
-endfunction()
 # Imported from esp_idf utilities.cmake: line 206-225
 function(fail_at_build_time target_name message_line0)
     idf_build_get_property(idf_path IDF_PATH)
@@ -260,6 +258,7 @@ function(idf_component_register)
                 list(APPEND component_incdirs "${component_dir}/${incdir}")
             endforeach()
         endif()
+
         # Same as what ESP-IDF does. Manually add the config directory to each libraries
         component_get_property(config_dir ECF CONFIG_DIR)
         list(APPEND component_incdirs "${config_dir}")
@@ -279,24 +278,31 @@ function(idf_component_register)
             target_include_directories(${component_name} INTERFACE
                 ${component_incdirs}
                 ${component_priv_incdirs}
-                "${${board_name}_DIR}/../include"
             )
         elseif(component_lib_type STREQUAL "STATIC")
-            target_include_directories(${component_name} PUBLIC ${component_incdirs} "${${board_name}_DIR}/../include")
+            target_include_directories(${component_name} PUBLIC ${component_incdirs})
             target_include_directories(${component_name} PRIVATE ${component_priv_incdirs})
         else()
             message(CRITICAL_ERROR "Component Library type for ${component_name} is invalid!")
         endif()
+
+        foreach(file ${arg_EMBED_FILES})
+            target_add_binary_data(${component_name} "${file}" "BINARY")
+        endforeach()
+
+        foreach(file ${arg_EMBED_TXTFILES})
+            target_add_binary_data(${component_name} "${file}" "TEXT")
+        endforeach()
         
         if(arg_LDFRAGMENTS)
             foreach(fragment ${arg_LDFRAGMENTS})
                 list(APPEND component_ldfragments "${component_dir}/${fragment}")
             endforeach()
             set_target_properties(${component_name} PROPERTIES LDFRAGMENTS "${component_ldfragments}")
+            component_set_property(ECF LDFRAGMENTS ${component_ldfragments} APPEND)
         endif()
 
         component_get_property(pending_components ECF PENDING_COMPONENTS)
-        # get_property(pending_components GLOBAL PROPERTY ${project_name}_${board_name}_PENDING_COMPONENTS)
 
         # Maybe temporal
         if(NOT ${component_name} STREQUAL "esp_common")
@@ -321,18 +327,27 @@ function(idf_component_register)
             #   I don't know why there are so many more dependency issues? I have to fix this.
             list(APPEND arg_REQUIRES "freertos")
         endif()
-         
+        
+        if(${component_name} STREQUAL "freertos")
+            list(APPEND arg_REQUIRES "esp_hw_support")
+        endif()
+
+        if(${component_name} STREQUAL "esp_system")
+            message(STATUS "${component_incdirs}" Green)
+        endif()
+
+        if(NOT ${component_name} STREQUAL "log")
+            list(APPEND arg_REQUIRES "log")
+        endif()
 
         if(arg_REQUIRES)
             foreach(req IN LISTS arg_REQUIRES)
                 if(NOT TARGET ${req} AND NOT ${req} IN_LIST pending_components)
                     message(STATUS "Required component '${req}' not yet processed! Adding it to pending components list." Yellow)
                     component_set_property(ECF PENDING_COMPONENTS ${req} APPEND)
-                    # set_property(GLOBAL APPEND PROPERTY ${project_name}_${board_name}_PENDING_COMPONENTS ${req})
                     list(APPEND pending_components ${req})
                 endif()
                 component_set_property(ECF PENDING_LINK_LIBRARIES ${component_name} PUBLIC ${req} APPEND)
-                # set_property(GLOBAL APPEND PROPERTY ${project_name}_${board_name}_PENDING_LINK_LIBRARIES ${component_name} PUBLIC ${req})
             endforeach()            
         endif()
 
@@ -341,11 +356,9 @@ function(idf_component_register)
                 if(NOT TARGET ${priv_req} AND NOT ${priv_req} IN_LIST pending_components)
                     message(STATUS "Privately required component '${priv_req}' not yet processed! Adding it to pending components list." Yellow)
                     component_set_property(ECF PENDING_COMPONENTS ${priv_req} APPEND)
-                    # set_property(GLOBAL APPEND PROPERTY ${project_name}_${board_name}_PENDING_COMPONENTS ${priv_req})
                     list(APPEND pending_components ${priv_req})
                 endif()
                 component_set_property(ECF PENDING_LINK_LIBRARIES ${component_name} PRIVATE ${priv_req} APPEND)
-                # set_property(GLOBAL APPEND PROPERTY ${project_name}_${board_name}_PENDING_LINK_LIBRARIES ${component_name} PRIVATE ${priv_req})
             endforeach()
         endif()
 
@@ -360,7 +373,6 @@ function(idf_component_register)
     endif()
     
     component_set_property(ECF LIBS ${component_name} APPEND)
-    # set_property(GLOBAL APPEND PROPERTY ${project_name}_${board_name}_LIBS ${component_name})
     set(COMPONENT_LIB ${component_name} PARENT_SCOPE)
     set(COMPONENT_TARGET ${component_lib} PARENT_SCOPE) # Apparently it is deprecated but available for compatibility (from esp-idf component.cmake: line 518-519)
 endfunction()
@@ -379,23 +391,20 @@ function(idf_build_get_property var property)
 endfunction()
 
 function(component_get_property var component property)
-    set(full_property ${project_name}_${board_name}_${component}_${property})
+    set(full_property ${subproject}_${component}_${property})
     get_property(val GLOBAL PROPERTY ${full_property})
-    # message(STATUS "${full_property}: ${val}")
     set(${var} ${val} PARENT_SCOPE)    
 endfunction()
 
 function(idf_component_get_property var component property)
     message(STATUS "-- idf_component_get_property is called! ${var}, ${component}, ${property}" Yellow)
-    component_get_property(${project_name}_${board_name}_GET_PROPERTY_RESULT ${component} ${property})
-    set(${var} ${${project_name}_${board_name}_GET_PROPERTY_RESULT} PARENT_SCOPE)
+    component_get_property(${subproject}_GET_PROPERTY_RESULT ${component} ${property})
+    set(${var} ${${subproject}_GET_PROPERTY_RESULT} PARENT_SCOPE)
 endfunction()
 
 function(component_set_property component property)
     cmake_parse_arguments(ARG "APPEND" "" "" ${ARGN})
-    set(full_property ${project_name}_${board_name}_${component}_${property})
-    # message(STATUS "${full_property}, ${ARG_UNPARSED_ARGUMENTS}")
-    # message(STATUS "Hi: ${ARG_UNPARSED_ARGUMENTS}" BoldRed)
+    set(full_property ${subproject}_${component}_${property})
     if(ARG_APPEND)
         set_property(GLOBAL APPEND PROPERTY ${full_property} ${ARG_UNPARSED_ARGUMENTS})
     else()
@@ -431,7 +440,6 @@ set(${board_name}_unsupported_components
 # Register component
 function(register_component component_name)
     component_get_property(subproject_libs ECF LIBS)
-    # get_property(subproject_libs GLOBAL PROPERTY ${project_name}_${board_name}_LIBS)
     list(LENGTH subproject_libs subproject_libs_length)
     message(STATUS "Registering component: ${component_name}, Registered components: ${subproject_libs_length}" Cyan)
     if(${component_name} IN_LIST ${board_name}_unsupported_components)
@@ -442,7 +450,6 @@ function(register_component component_name)
             set(IDF_TARGET ${${board_name}_TARGET} PARENT_SCOPE)
             add_subdirectory(${${board_name}_BOARD_COMPONENTS_DIR}/${component_name})
             unset(IDF_TARGET)
-            # include(${${board_name}_BOARD_COMPONENTS_DIR}/${component_name}/CMakeLists.txt)
         else()
             message(WARNING "-- Component '${component_name}' not found at ${${${board_name}_BOARD_COMPONENTS_DIR}/${component_name}}")
         endif()
@@ -450,11 +457,8 @@ function(register_component component_name)
 endfunction()
 
 # Processing the components from esp-idf
-function(process_component_requirements)
-    component_set_property(ECF CONFIG_DIR "${CMAKE_BINARY_DIR}/config")
-
-    message(STATUS "Generating sdkconfig.h file..." BoldMagenta)
-    process_sdkconfig()
+function(process_component_requirements subproject)
+    set(subproject ${subproject} PARENT_SCOPE)    
 
     set(pending_components "")
     set(pending_link_libraries "")
@@ -462,21 +466,25 @@ function(process_component_requirements)
 
     # We use GLOBAL property to resolve sub_directory scope not being able to share variables back to this scope
     component_set_property(ECF PENDING_COMPONENTS ${pending_components})
-    # set_property(GLOBAL PROPERTY ${project_name}_${board_name}_PENDING_COMPONENTS ${pending_components})
     component_set_property(ECF PENDING_LINK_LIBRARIES ${pending_link_libraries})
-    # set_property(GLOBAL PROPERTY ${project_name}_${board_name}_PENDING_LINK_LIBRARIES ${pending_link_libraries})
     component_set_property(ECF LIBS "")
-    # set_property(GLOBAL PROPERTY ${project_name}_${board_name}_LIBS "")
+    component_set_property(ECF LDFRAGMENTS "")
+    
+    component_set_property(ECF CONFIG_DIR "${CMAKE_BINARY_DIR}/config")
+    component_get_property(config_dir ECF CONFIG_DIR)
+    list(APPEND ${subproject}_INCDIR ${config_dir})
+    set(${subproject}_INCDIR ${${subproject}_INCDIR} PARENT_SCOPE)
+
+    message(STATUS "Generating sdkconfig.h file..." BoldMagenta)
+    process_sdkconfig()
 
     message(STATUS "Building necessary component libraries..." BoldMagenta)
     while(pending_components)
         list(GET pending_components 0 component)
         list(REMOVE_AT pending_components 0)
         component_set_property(ECF PENDING_COMPONENTS ${pending_components})
-        # set_property(GLOBAL PROPERTY ${project_name}_${board_name}_PENDING_COMPONENTS ${pending_components})
         register_component(${component})
         component_get_property(pending_components ECF PENDING_COMPONENTS)
-        # get_property(pending_components GLOBAL PROPERTY ${project_name}_${board_name}_PENDING_COMPONENTS)
     endwhile()
 
     message(STATUS "Linking libraries..." BoldMagenta)
@@ -514,5 +522,15 @@ function(process_component_requirements)
 
         math(EXPR index "${index} + 1")
     endwhile()
+
+    # Setting libraries
+    component_get_property(libs ECF LIBS)
+    set(${subproject}_LIBS ${libs} PARENT_SCOPE)
+
+    # Setting Linker Fragments
+    # component_get_property(ldfragments ECF LDFRAGMENTS)
+    # set(${subproject}_LINKER_SCRIPT ${ldfragments} PARENT_SCOPE)
+    
+    unset(subproject)
 
 endfunction()
